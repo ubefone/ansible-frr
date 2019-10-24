@@ -192,6 +192,11 @@ router ospf
   passive-interface {{ passive_int }}
 {%       endfor %}
 {%     endif %}
+{%     if frr_ospf['no_passive_interfaces'] is defined %}
+{%       for passive_int in frr_ospf['no_passive_interfaces'] %}
+  no passive-interface {{ passive_int }}
+{%       endfor %}
+{%     endif %}
 {%     if frr_ospf['redistribute'] is defined %}
 {%       for redist_protocol in frr_ospf['redistribute'] %}
   redistribute {{ redist_protocol }}
