@@ -107,28 +107,32 @@
 
 - name: Doing things for Ubuntu-18.04
   block:
-    - name: Create our download directory
-      file:
-        path: /tmp/frr/{{ frr_version }}/
-        state: directory
-      changed_when: false
-
-    - name: Download FRR package
-      get_url:
-        url: "{{ item }}"
-        dest: /tmp/frr/{{ frr_version }}/
-      with_items: "{{ frr_debs }}"
-
-    - name: Installing FRR {{ frr_version }} and netplan apply to fix connectivity
-      shell: |
-        dpkg --force-confnew -i /tmp/frr/{{ frr_version }}/frr*.deb
-        netplan apply 2> /dev/null || { echo >&2 "no netplan installed";}
-      become: true
-      when: _frr_version.stdout != frr_version
-      notify:
-        - restart frr
-        - start frr
-  when: ansible_lsb.release is version ('18.04', '>=')
+    - name: Install FRR from URL
+      block:
+        - name: Create our download directory
+          file:
+            path: /tmp/frr/{{ frr_version }}/
+            state: directory
+          changed_when: false
+    
+        - name: Download FRR package
+          get_url:
+            url: "{{ item }}"
+            dest: /tmp/frr/{{ frr_version }}/
+          with_items: "{{ frr_debs }}"
+    
+        - name: Installing FRR {{ frr_version }} and netplan apply to fix connectivity
+          shell: |
+            dpkg --force-confnew -i /tmp/frr/{{ frr_version }}/frr*.deb
+            netplan apply 2> /dev/null || { echo >&2 "no netplan installed";}
+          become: true
+          when: _frr_version.stdout != frr_version
+          notify:
+            - restart frr
+            - start frr            
+  when: 
+    - ansible_lsb.release is version ('18.04', '>=')
+    - frr_version is version ('7', '<')
 
 - name: Do things for not Ubuntu-18.04
   block:
@@ -141,7 +145,28 @@
       with_items: "{{ frr_debs }}"
       register: _frrdownload
       when: _frr_version.stdout != frr_version
-  when: ansible_lsb.release is version ('18.04', '<')
+  when:
+    - ansible_lsb.release is version ('18.04', '<')
+    - frr_version is version ('7', '<')
+
+- name: Install FRR from repository
+  block:
+    - name: Add FRR APT key
+      apt_key:
+        url: https://deb.frrouting.org/frr/keys.asc
+
+    - name: Add FRR APT repository
+      apt_repository:
+        repo: "deb https://deb.frrouting.org/frr {{ ansible_distribution_release }} frr-7"
+        filename: frrouting
+
+    - name: Install FRR package
+      apt:
+        name: "frr={{ frr_version }}"
+        state: present
+  when: 
+    - frr_version is version ('7', '>=')
+    - frr_version is version ('8', '<')
 
 - name: stat config
   stat:
