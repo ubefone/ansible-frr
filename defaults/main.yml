@@ -74,6 +74,8 @@ frr_ospf: {}
   # log_adjacency_changes: true
   # passive_interfaces: []
   #   # - default
+  # no_passive_interfaces: []
+  #   # - eth0
   # redistribute: []
   #   # - bgp
   #   # - connected
@@ -81,6 +83,9 @@ frr_ospf: {}
   #   # - ospf
   #   # - static
   #
+
+# Defines OSPF configuration as a list
+frr_ospfs: []
 
 # Defines Static Routes
 frr_static: {}

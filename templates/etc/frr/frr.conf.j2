@@ -33,10 +33,11 @@ interface {{ iface }}
   ip ospf message-digest-key {{ iface_data['auth']['id'] }} md5 {{ iface_data['auth']['key'] }}
 {%     endif %}
 {%     if iface_data['other'] is defined %}
-{%       for option in iface_data['other'].iteritems() %}
+{%       for option in iface_data['other'] %}
   {{ option }}
 {%       endfor %}
 {%     endif %}
+!
 {%   endfor %}
 {% endif %}
 !
@@ -165,50 +166,19 @@ router bgp {{ asn }}
 {%   endif %}
 {% endif %}
 !
-{% if frr_daemons['ospfd'] %}
-router ospf
-{%       if frr_router_id is defined %}
-  router-id {{ frr_router_id }}
-{%       endif %}
-{%   if frr_ospf is defined and frr_ospf != {} %}
-{%     if frr_ospf['areas'] is defined %}
-{%       for area, area_data in frr_ospf['areas'].iteritems() %}
-{%         for area_network in area_data['networks'] %}
-  network {{ area_network }} area {{ area }}
-{%         endfor %}
-{%         if area_data['auth'] is defined %}
-  area {{ area }} authentication message-digest
-{%         endif %}
-{%         if area_data['type'] is defined %}
-  area {{ area }} {{ area_data['type'] }}
-{%         endif %}
-{%       endfor %}
-{%     endif %}
-{%     if frr_ospf['log_adjacency_changes'] | default(False) %}
-  log-adjacency-changes
-{%     endif %}
-{%     if frr_ospf['passive_interfaces'] is defined %}
-{%       for passive_int in frr_ospf['passive_interfaces'] %}
-  passive-interface {{ passive_int }}
-{%       endfor %}
-{%     endif %}
-{%     if frr_ospf['no_passive_interfaces'] is defined %}
-{%       for passive_int in frr_ospf['no_passive_interfaces'] %}
-  no passive-interface {{ passive_int }}
-{%       endfor %}
-{%     endif %}
-{%     if frr_ospf['redistribute'] is defined %}
-{%       for redist_protocol in frr_ospf['redistribute'] %}
-  redistribute {{ redist_protocol }}
-{%       endfor %}
-{%     endif %}
-{%     if frr_ospf['distribute_list'] is defined %}
-{%       for acl in frr_ospf['distribute_list'] %}
-  distribute-list {{ acl.name }} {{ acl.dir }} {{ acl.protocol }}
-{%       endfor %}
-{%     endif %}
-{%   endif %}
-{% endif %}
+{% if frr_daemons['ospfd'] -%} 
+{%   if frr_ospf is defined and frr_ospf -%} 
+{%     set frr_ospf_item = frr_ospf -%} 
+{%    include "ospf.j2" %} 
+!
+{%   endif -%} 
+{%   if frr_ospfs is defined and frr_ospfs -%} 
+{%     for frr_ospf_item in frr_ospfs -%} 
+{%       include "ospf.j2" %} 
+!
+{%     endfor -%} 
+{%   endif -%} 
+{% endif -%}
 !
 {% if frr_prefix_list is defined and frr_prefix_list != {} %}
 {%   for prefix_list_name, sequences in frr_prefix_list.iteritems() %}

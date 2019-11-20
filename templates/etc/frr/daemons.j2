@@ -14,6 +14,16 @@ vtysh_enable=yes
 zebra_options="  -A 127.0.0.1 -s 90000000"
 bgpd_options="   -A 127.0.0.1"
 ospfd_options="  -A 127.0.0.1"
+{% if frr_ospf['process_id'] is defined or frr_ospfs|selectattr('process_id') -%}
+{%   set pids = [] -%}
+{%   if frr_ospf['process_id'] is defined -%}
+{%     do pids.append(frr_ospf['process_id']) -%}
+{%   endif -%}
+{%   for pid in frr_ospfs|selectattr('process_id')|map(attribute='process_id')|list -%}
+{%     do pids.append(pid) -%}
+{%   endfor -%}
+ospfd_instances={{ pids|join(',') }}
+{% endif -%}
 ospf6d_options=" -A ::1"
 ripd_options="   -A 127.0.0.1"
 ripngd_options=" -A ::1"

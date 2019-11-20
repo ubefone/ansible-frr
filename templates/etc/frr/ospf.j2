@@ -1,0 +1,40 @@
+router ospf {{ frr_ospf_item['process_id'] if frr_ospf_item['process_id'] is defined else "" }} {{ "vrf " + frr_ospf_item['vrf'] if frr_ospf_item['vrf'] is defined else "" }} 
+{% if frr_ospf_item['router_id'] is defined or frr_router_id is defined %}
+  router-id {{ frr_ospf_item['router_id'] if frr_ospf_item['router_id'] is defined else frr_router_id }}
+{% endif %}
+{% if frr_ospf_item['areas'] is defined %}
+{%   for area, area_data in frr_ospf_item['areas'].iteritems() %}
+{%     for area_network in area_data['networks'] %}
+  network {{ area_network }} area {{ area }}
+{%     endfor %}
+{%     if area_data['auth'] is defined %}
+  area {{ area }} authentication message-digest
+{%     endif %}
+{%     if area_data['type'] is defined %}
+  area {{ area }} {{ area_data['type'] }}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+{% if frr_ospf_item['log_adjacency_changes'] | default(False) %}
+  log-adjacency-changes
+{% endif %}
+{% if frr_ospf_item['passive_interfaces'] is defined %}
+{%   for passive_int in frr_ospf_item['passive_interfaces'] %}
+  passive-interface {{ passive_int }}
+{%   endfor %}
+{% endif %}
+{% if frr_ospf_item['no_passive_interfaces'] is defined %}
+{%   for passive_int in frr_ospf_item['no_passive_interfaces'] %}
+  no passive-interface {{ passive_int }}
+{%   endfor %}
+{% endif %}
+{% if frr_ospf_item['redistribute'] is defined %}
+{%   for redist_protocol in frr_ospf_item['redistribute'] %}
+  redistribute {{ redist_protocol }}
+{%   endfor %}
+{% endif %}
+{% if frr_ospf_item['distribute_list'] is defined %}
+{%   for acl in frr_ospf_item['distribute_list'] %}
+  distribute-list {{ acl.name }} {{ acl.dir }} {{ acl.protocol }}
+{%   endfor %}
+{% endif %}
