@@ -38,3 +38,6 @@ router ospf {{ frr_ospf_item['process_id'] if frr_ospf_item['process_id'] is def
   distribute-list {{ acl.name }} {{ acl.dir }} {{ acl.protocol }}
 {%   endfor %}
 {% endif %}
+{% if frr_ospf_item['default_information'] is defined %}
+  default-information {{ frr_ospf_item['default_information'] }}
+{% endif %}
