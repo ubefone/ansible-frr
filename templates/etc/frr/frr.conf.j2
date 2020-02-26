@@ -41,14 +41,14 @@ interface {{ iface }}
 {%   endfor %}
 {% endif %}
 !
-{% if frr_static is defined and frr_static != {} %}
-{%   for dest, next_hop in frr_static.iteritems() %}
-ip route {{ dest }} {{ next_hop }}
+{% if frr_static is defined and frr_static != [] %}
+{%   for route in frr_static %}
+ip route {{ route['dest'] }} {{ route['next_hop'] }}
 {%   endfor %}
 {% endif %}
-{% if frr_static_v6 is defined and frr_static_v6 != {} %}
-{%   for dest, next_hop in frr_static_v6.iteritems() %}
-ip route {{ dest }} {{ next_hop }}
+{% if frr_static_v6 is defined and frr_static_v6 != [] %}
+{%   for route in frr_static_v6 %}
+ip route {{ route['dest'] }} {{ route['next_hop'] }}
 {%   endfor %}
 {% endif %}
 !
@@ -223,6 +223,12 @@ route-map {{ map_name }} {{ seq }}
 {%       endif %}
 {%       if seq_data['origin'] is defined %}
   set origin {{ seq_data['origin'] }}
+{%       endif %}
+{%       if seq_data['call'] is defined %}
+  call {{ seq_data['call'] }}
+{%       endif %}
+{%       if seq_data['on-match'] is defined %}
+  call {{ seq_data['on-match'] }}
 {%       endif %}
 !
 {%     endfor %}
